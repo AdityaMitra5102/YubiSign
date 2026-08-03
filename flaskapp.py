@@ -238,7 +238,7 @@ def sign_pdf(pdf_bytes, private_key, cert_pem) -> bytes:
 @app.route("/")
 def index():
     args = request.cookies.get("args", "")
-    return render_template("index2.html", args=args)
+    return render_template("index.html", args=args)
 
 
 @app.route("/keygen", methods=["POST"])
