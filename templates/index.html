@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YubiSign PDF // HUD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #050811;
+            --card-bg: rgba(13, 19, 33, 0.7);
+            --primary-cyan: #00f0ff;
+            --primary-glow: rgba(0, 240, 255, 0.4);
+            --secondary-purple: #7000ff;
+            --text-bright: #f0f6fc;
+            --text-dim: #8b949e;
+            --border-glow: rgba(0, 240, 255, 0.2);
+            --danger-red: #ff0055;
+            --font-head: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-bright);
+            font-family: var(--font-body);
+            font-size: 18px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            /* Cyberpunk Grid Background */
+            background-image: 
+                linear-gradient(to right, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Sci-Fi Top Header */
+        header {
+            background: rgba(8, 12, 22, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glow);
+            padding: 1.2rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-family: var(--font-head);
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--primary-cyan);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--primary-glow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-cyan);
+            box-shadow: 0 0 8px var(--primary-cyan);
+            display: inline-block;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Container Layout */
+        .container {
+            max-width: 900px;
+            width: 100%;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            flex-grow: 1;
+        }
+
+        /* Futuristic Glass Cards */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            padding: 2.5rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 240, 255, 0.03);
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-cyan), transparent);
+        }
+
+        .card-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-family: var(--font-head);
+            font-size: 1.6rem;
+            letter-spacing: 1.5px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        /* Hero View */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .hero h1 {
+            font-family: var(--font-head);
+            font-size: 2.5rem;
+            color: var(--text-bright);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .hero p {
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            letter-spacing: 1px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        /* Sci-Fi Forms & Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-family: var(--font-head);
+            font-size: 0.8rem;
+            color: var(--primary-cyan);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        input[type="text"], 
+        textarea, 
+        input[type="file"] {
+            width: 100%;
+            background: rgba(5, 8, 17, 0.7);
+            border: 1px solid var(--border-glow);
+            border-radius: 2px;
+            padding: 0.8rem 1rem;
+            color: var(--text-bright);
+            font-family: var(--font-code);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus, 
+        textarea:focus {
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 12px var(--primary-glow);
+            background: rgba(5, 8, 17, 0.9);
+        }
+
+        textarea {
+            resize: vertical;
+            color: #7ee787;
+        }
+
+        input[type="file"] {
+            cursor: pointer;
+            color: var(--text-dim);
+        }
+
+        input[type="file"]::-webkit-file-upload-button {
+            background: var(--secondary-purple);
+            border: none;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            font-family: var(--font-head);
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-right: 1rem;
+            transition: 0.2s;
+        }
+
+        input[type="file"]::-webkit-file-upload-button:hover {
+            background: #851a00;
+        }
+
+        /* Buttons */
+        .btn {
+            font-family: var(--font-head);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 0.8rem 1.8rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+
+        .btn-primary {
+            background: var(--primary-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #50f5ff;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-glow);
+            color: var(--text-bright);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: var(--primary-cyan);
+            color: var(--primary-cyan);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+
+        .action-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        iframe {
+            border: 1px solid var(--border-glow);
+            border-radius: 2px;
+            margin-top: 1.5rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <span class="logo-dot"></span> YUBISIGN // PDF
+        </div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="showSection('home')">Home</button>
+            <button class="btn btn-secondary" onclick="showSection('keygen')">Keygen</button>
+            <button class="btn btn-secondary" onclick="showSection('signer')">Signer</button>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- HOME VIEW -->
+        <div id="home" class="card hero">
+            <h1>Hardware Cryptography</h1>
+            <p>YubiKey PIV Module Interface // Secure PDF Authentication Engine</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="showSection('keygen')">Generate Keys</button>
+                <button class="btn btn-secondary" onclick="showSection('signer')">Open Signer</button>
+            </div>
+        </div>
+
+        <!-- KEYGEN VIEW -->
+        <div id="keygen" class="card" style="display: none;">
+            <div class="card-header">
+                <h2>Key Generation Terminal</h2>
+                <button class="btn btn-secondary" onclick="showSection('home')">← Home</button>
+            </div>
+
+            <form id="keyinfo">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="country">Country Code</label>
+                        <input type="text" id="country" name="country" placeholder="US">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="state">State / Province</label>
+                        <input type="text" id="state" name="state" placeholder="California">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="locality">Locality</label>
+                        <input type="text" id="locality" name="locality" placeholder="San Francisco">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="org">Organization Name</label>
+                        <input type="text" id="org" name="org" placeholder="Example LLC">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="cname">Common Name</label>
+                        <input type="text" id="cname" name="cname" placeholder="example.com">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Initialize Key Generation</button>
+            </form>
+
+            <div style="margin: 2.5rem 0 1.5rem 0; height: 1px; background: var(--border-glow);"></div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="cert">Output Certificate (PEM)</label>
+                <textarea id="cert" rows="5" readonly></textarea>
+                <div class="action-group">
+                    <button id="certbtn" class="btn btn-secondary" onclick="downloadCert();" disabled>Download Certificate</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="args">Signing Arguments Block</label>
+                <textarea id="args" rows="5" readonly></textarea>
+                <div class="action-group">
+                    <button id="argsbtn" class="btn btn-secondary" onclick="downloadArgs();" disabled>Download Arguments</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIGNER VIEW -->
+        <div id="signer" class="card" style="display: none;">
+            <div class="card-header">
+                <h2>Cryptographic Signer</h2>
+                <button class="btn btn-secondary" onclick="showSection('home')">← Home</button>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="args2">Signing Arguments</label>
+                <textarea id="args2" rows="5">{{args}}</textarea>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label for="pdfupload">Select Target Document (PDF)</label>
+                <input type="file" id="pdfupload" accept="application/pdf">
+            </div>
+
+            <button id="sign" class="btn btn-primary" style="width: 100%; margin-bottom: 1.5rem;" disabled>Execute Digital Signature</button>
+
+            <iframe id="pdfviewer" style="width: 100%; height: 500px; display: none;"></iframe>
+        </div>
+
+    </div>
+
+    <!-- Interface Switching Script -->
+    <script>
+        function showSection(sectionId) {
+            document.getElementById('home').style.display = 'none';
+            document.getElementById('keygen').style.display = 'none';
+            document.getElementById('signer').style.display = 'none';
+
+            document.getElementById(sectionId).style.display = 'block';
+        }
+    </script>
+
+    <!-- Native App Logic (Unmodified) -->
+    <script>
+        function downloadCert() {
+            const cert = document.getElementById("cert").value;
+            const blob = new Blob([cert], {type: "text/plain; charset=utf-8"});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "public-key.asc";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function downloadArgs() {
+            const cert = document.getElementById("args").value;
+            const blob = new Blob([cert], {type: "text/plain; charset=utf-8"});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "args.txt";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        const form = document.getElementById("keyinfo");
+        form.addEventListener('submit', async(event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const formObject = Object.fromEntries(formData.entries());
+            const jsonString = JSON.stringify(formObject);
+
+            try {
+                setTimeout(() => alert("Tap Yubikey when it blinks. It will blink twice."), 0);
+                const response = await fetch("/keygen", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': "application/json",
+                        'Accept': 'application/json'
+                    },
+                    body: jsonString
+                });
+
+                if (!response.ok) {
+                    throw new Error("Request failed");
+                }
+
+                const result = await response.json();
+                document.getElementById("cert").value = result.cert;
+                document.getElementById("args").value = result.args;
+                document.getElementById("args2").value = result.args;
+                document.getElementById("certbtn").disabled = false;
+                document.getElementById("argsbtn").disabled = false;
+
+            } catch(error) {
+                alert("Error!");
+            }
+        });
+
+        const pdfinput = document.getElementById("pdfupload");
+        const pdfviewer = document.getElementById("pdfviewer");
+
+        pdfinput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                const fileURL = URL.createObjectURL(file);
+                pdfviewer.src = fileURL;
+                pdfviewer.style.display = "block";
+                document.getElementById("sign").disabled = false;
+            } else {
+                alert("Select a PDF File");
+            }
+        });
+
+        const signbtn = document.getElementById("sign");
+        signbtn.addEventListener('click', async() => {
+            const args = document.getElementById("args2").value;
+            const fileSelected = pdfinput.files[0];
+
+            const formData = new FormData();
+            formData.append("args", args);
+            formData.append("pdf", fileSelected);
+            setTimeout(() => alert("Tap Yubikey when it blinks"), 0);
+
+            try {
+                const response = await fetch('/sign', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = objectUrl;
+                link.download = "signed.pdf";
+
+                link.click();
+                URL.revokeObjectURL(objectUrl);
+            } catch(error) {
+                alert("Error");
+            }
+        });
+    </script>
+</body>
+</html>
