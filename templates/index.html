@@ -422,7 +422,7 @@
             const blob = new Blob([cert], {type: "text/plain; charset=utf-8"});
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "public-key.asc";
+            link.download = "public-key.crt";
             link.click();
             URL.revokeObjectURL(link.href);
         }
