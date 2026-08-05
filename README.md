@@ -168,6 +168,91 @@ This doesn't really need any instruction. The application presents a GUI on a we
 ## Key generation from Yubikey
 
 - To generate a new keypair, go to `Generate Keys`. By default it would be on the `Generate from Yubikey`tab which would run a fresh `MakeCredential` call.
+
 ![Generate from Yubikey](images/keygen_yk.png)
+
 - Fill in the details for the certificate and click on `Generate From Yubikey`
-- Tap the Yubikey when it blinks. It will blink twice: the first time when running the MakeCredential call, the second time for signing the certificate. The generated certificate and "arguments"
+
+- Tap the Yubikey when it blinks. It will blink twice: the first time when running the MakeCredential call, the second time for signing the certificate. The generated certificate and "arguments" will be displayed. 
+
+![Generated cert and args](images/keygen_yk_complete.png)
+
+- Both files can be downloaded. Downloading the certificate is required to be able to verify signed PDFs later. However, it is ok even if it is not downloaded at the moment. It can be retrieved from the "arguments" later. 
+
+![Certificate](images/yk_cert.png)
+
+Similarly downloading the "arguments" is not required at the moment. If using only one keypair, the arguments is stored in the browser cookies. However, it is recommended to download it, since if it is lost, the generated key pair cannot be used anymore.
+
+## Key generation from an existing credential (ARKG)
+
+- To generate a new unlinkable keypair from an existing credential, go to the `Generate from existing key` tab in `Generate Keys` section.
+
+![Generate ARKG](images/keygen_arkg.png)
+
+- Paste or drag and drop the "arguments" file of the previous keypair in the required box and fill the details for the new certificate.
+
+- Click `Generate from existing key`
+
+![ARKG Keygen Complete](images/keygen_arkg_complete.png)
+
+- New certificate and arguments will be generated. It can be downloaded similar to the previous section.
+
+![ARKG Cert](images/arkg_cert.png)
+
+## Certificate recovery
+
+This step is to be used if the certificate was not downloaded previously and you need it to verify the signed documents.
+
+- Go to the `Signer` tab.
+
+- Paste or drag and drop the arguments.
+
+- Click `Download Certificate`.
+
+![Certificate recovery](images/cert_recovery.png)
+
+## Adding certificates to trust store
+
+Certificates are needed to be trusted to use it to verify signatures. This has no fixed procedure. Instead, users are recommended to follow the procedure mentioned by their operating system or PDF reader.
+
+The guide for Adobe Reader is available [here](https://helpx.adobe.com/in/acrobat/using/trusted-identities.html).
+
+![YK cert adobe](images/yk_cert_adobe.png)
+
+## Signing documents
+
+- Open the `Signer` tab and drag and drop or paste the arguments of the key to be used to sign.
+
+- Choose the PDF file.
+
+- Click `Sign Document`.
+
+![Sign](images/yk_sign.png)
+
+## Verifying signatures
+
+If the certificates are added to the trust store, opening the signed documents in the PDF reader would show the verification information.
+
+![YK Sign Verify](images/yk_sign_adobe.png)
+
+![ARKG Sign Verify](images/arkg_sign_adobe.png)
+
+Alternatively, if the certificate is not added, the signer may publish the hash of the certificate. The verifier may match the hash against the one shown in the PDF reader.
+
+For example the signer may publish the SHA 1 digest of the certificate:
+
+![Signer cert SHA1](images/cert_sha1.png)
+
+And the verifier may verify the same against the one shown in the PDF reader.
+
+![Verifier SHA1](images/cert_sha1_adobe.png)
+
+# Help used:
+
+The following resources were used in development of the project and learning:
+
+- [Python-FIDO2 Library](https://github.com/yubico/python-fido2)
+- [ARKG Algorithm](https://datatracker.ietf.org/doc/draft-bradleylundberg-cfrg-arkg/)
+- [PreviewSign extension](https://pr-preview.s3.amazonaws.com/w3c/webauthn/pull/2078.html#sctn-sign-extension)
+- UI/ CSS has been done with the help of GenAI Chatbots Claude and Grok, free tier.
+
