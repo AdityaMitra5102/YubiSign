@@ -19,7 +19,139 @@ The advantages of using YubiSign:
 
 While this problem is not related to the chosen problem statement, it was instrumental in fast development of the solution. I am developing on a Windows system. Windows FIDO2 client implemented under `webauthn.dll` does not support the `PreviewSign` extension and drops the calls. The only way to use it was to run the application with elevated privileges. Now running a whole python application which potentially interacts with artifacts from the internet (PDF Files) and uses the `pickle` library with elevated privileges is definetely a terrible idea. (I know I should have used better serialization than `pickle` but shortage of time in this hackathon forced me to use it.) It could make the application an easy target for RCE vulnerabilities. Hence, I developed an IPC based daemon which ran using `system` privileges, thus not fully-elevated but allows direct CTAP access over HID channels. 
 
-The same is mentioned in the codebase at [IPC Calls](https://github.com/AdityaMitra5102/YubiSign/blob/c081affdbf1493b29c7c2c071eb753deed399ce8/flaskapp.py#L21). Installing the IPC Daemon can be done by installing the `python-fido2` library from my fork and branch at [Repo](https://github.com/AdityaMitra5102/python-fido2/tree/namedpipe#installation). Keeping the daemon active ensures the application can run directly without having to run with elevated privileges.
+The same is mentioned in the codebase at [IPC Calls](https://github.com/AdityaMitra5102/YubiSign/blob/main/yubisign.py#L21). Installing the IPC Daemon can be done by installing the `python-fido2` library from my fork and branch at [Repo](https://github.com/AdityaMitra5102/python-fido2/tree/namedpipe#installation). Keeping the daemon active ensures the application can run directly without having to run with elevated privileges.
 
 # Yubikey 5.8 specific feature
 
+The project uses the PreviewSign extension and ARKG to sign documents and to create unlinkable keypairs from same credential, respectively. This is achieved by creating a `Signer class` that internally uses the PreviewSign extension but is exposed as a subclass of `EllipticCurvePrivateKey`. Thus, it can be used by other libraries like `endesive` for PDF signing, or similar for other general purpose cryptographic signatures.
+
+```py
+class YubikeySigner(ec.EllipticCurvePrivateKey):
+    def __init__(self, public_key: ec.EllipticCurvePublicKey):
+        self._public_key = public_key
+
+    def public_key(self):
+        return self._public_key
+
+    @property
+    def key_size(self):
+        return self._public_key.key_size
+
+    def set_args(self, args):
+        self.args = args
+
+    def sign(
+        self, data: bytes, signature_algorithm: ec.EllipticCurveSignatureAlgorithm
+    ):
+        client, info = get_client(
+            lambda info: PreviewSignExtension.NAME in info.extensions,
+            extensions=[PreviewSignExtension()],
+        )
+
+        request_options, state = server.authenticate_begin(
+            self.args.credentials, user_verification=uv
+        )
+        digest = hashes.Hash(hashes.SHA256())
+        digest.update(data)
+        ph_data = digest.finalize()
+        result = client.get_assertion(
+            {
+                **request_options["publicKey"],
+                "extensions": {
+                    PreviewSignExtension.NAME: {
+                        "signByCredential": {
+                            websafe_encode(self.args.credentials[0].credential_id): {
+                                "keyHandle": self.args.key_handle,
+                                "tbs": ph_data,
+                                "additionalArgs": cbor.encode(self.args.args),
+                            },
+                        },
+                    }
+                },
+            }
+        )
+        result = result.get_response(0)
+
+        sign_result = result.client_extension_results[PreviewSignExtension.NAME]
+        signature = websafe_decode(sign_result.get("signature"))
+        server.authenticate_complete(state, self.args.credentials, result)
+        return signature
+
+    def exchange(self, algorithm: ec.ECDH, peer_public_key: ec.EllipticCurvePublicKey):
+        raise NotImplementedError()
+
+    @property
+    def curve(self):
+        return self._public_key.curve
+
+    def private_numbers(self):
+        raise NotImplementedError()
+
+    def private_bytes(
+        self,
+        encoding: serialization.Encoding,
+        format: serialization.PrivateFormat,
+        encryption_algorithm: serialization.KeySerializationEncryption,
+    ) -> bytes:
+        raise NotImplementedError()
+
+    def __copy__(self):
+        raise NotImplementedError()
+
+    def __deepcopy__(self, memo: dict[Any, Any]):
+        raise NotImplementedError()
+```
+
+The above shows the implementation of the signer class as a subclass of `EllipticCurvePrivateKey` which facilitates the usability.
+
+Another important feature used is since CTAP 2.2, `MakeCredential` calls do not require UV or pin mandatorily (except for discoverable credentials). This makes the flow very seamless and done not prompt the user for pin inputs.
+
+# Setup and run instructions
+
+Follow the below instructions to install  YubiSign
+
+- Clone the repository with 
+
+`git clone https://github.com/AdityaMitra5102/YubiSign.git`
+
+- Go inside the directory
+
+`cd YubiSign`
+
+- Install dependencies (you may have to use `python3` instead of `python` in some linux systems.)
+
+`python -m pip install requirements.txt`
+
+- [On linux systems] Set up `udev` rules to allow access to `HIDRAW` devies for direct CTAP Access
+
+- Launch the application [Use elevation in Windows]
+
+`python yubisign.py`
+
+## [Optional, Windows only] Set up IPC Daemon to be able to run the application without elevation.
+
+Ideally you would follow the instructions [here](https://github.com/AdityaMitra5102/python-fido2/tree/namedpipe#installation) but summarizing the steps below for fast setup.
+
+- Clone my fork of `python-fido2`
+
+`git clone https://github.com/AdityaMitra5102/python-fido2`
+
+- Go in the directory
+
+`cd python-fido2`
+
+- Switch to the branch that supports IPC.
+
+`git branch namedpipe`
+
+- Install it with dependencies for IPC
+
+`python -m pip install .[win] --upgrade`
+
+- From an elevated terminal install and start the IPC
+
+`python -m fido2.ipcservice.service --startup auto install`
+
+`sc start CTAPIPCService`
+
+Now since the IPC Daemon is running, you may start YubiSign by running `python yubisign.py` from a non-elevated terminal.
