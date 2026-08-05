@@ -106,7 +106,7 @@ The above shows the implementation of the signer class as a subclass of `Ellipti
 
 Another important feature used is since CTAP 2.2, `MakeCredential` calls do not require UV or pin mandatorily (except for discoverable credentials). This makes the flow very seamless and done not prompt the user for pin inputs.
 
-# Setup and run instructions
+# Setup instructions
 
 Follow the below instructions to install  YubiSign
 
@@ -127,6 +127,8 @@ Follow the below instructions to install  YubiSign
 - Launch the application [Use elevation in Windows]
 
 `python yubisign.py`
+
+- A web browser is supposed to open automatically. If it doesn't open, navigate to `http://localhost:5000` or click [here](http://localhost:5000).
 
 ## [Optional, Windows only] Set up IPC Daemon to be able to run the application without elevation.
 
@@ -155,3 +157,7 @@ Ideally you would follow the instructions [here](https://github.com/AdityaMitra5
 `sc start CTAPIPCService`
 
 Now since the IPC Daemon is running, you may start YubiSign by running `python yubisign.py` from a non-elevated terminal.
+
+# Running instructions
+
+This doesn't really need any instruction. The application presents a GUI on a web interface.
