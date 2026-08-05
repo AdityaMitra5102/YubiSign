@@ -18,6 +18,23 @@ try:
 except Exception:
     use_winclient = False
 
+# Ignore this if block. I use a custom IPC service at https://github.com/AdityaMitra5102/python-fido2/tree/namedpipe to easily access CTAP directly without Admin right
+# More about this at https://github.com/Yubico/python-fido2/pull/293
+# To use this path, install python-fido2 from the above repo. Follow the instructions at https://github.com/AdityaMitra5102/python-fido2/tree/namedpipe#installation to install the service.
+# However if the IPC is not used and on Windows, you need to start this flaskapp as admin
+if use_winclient:
+    try:
+        from fido2.hid import ipc_available
+        if ipc_available():
+            use_winclient = False
+    except:
+        print("Using WindowsClient.")
+        # I should have killed the program here
+        # because WindowsClient does not support PreviewSign Extension as of today
+        # but I am not doing it out of optimism
+        # hoping Microsoft will add the support for this extension soon
+        # and this code path will magically start working.
+
 
 class CliInteraction(UserInteraction):
     def __init__(self):
@@ -345,7 +362,9 @@ def sign():
         download_name="signed.pdf",
     )
 
-
+import webbrowser
 if __name__ == "__main__":
     print(f"Starting {productname}")
-    app.run("0.0.0.0", port=5000, debug=False)
+    port = 5000
+    webbrowser.open(f'http://localhost:{port}')
+    app.run("0.0.0.0", port=port, debug=False)
