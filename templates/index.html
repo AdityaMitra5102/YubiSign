@@ -753,6 +753,7 @@
         if (args2Value.trim() === '') {
             document.getElementById('certsign').value = '';
             document.getElementById('certbtnsign').disabled = true;
+            document.getElementById("sign").disabled = true;
             return;
         }
         
@@ -777,10 +778,17 @@
             if (data && data.cert) {
                 document.getElementById('certsign').value = data.cert;
                 document.getElementById('certbtnsign').disabled = false;
+                const pdfinput = document.getElementById("pdfupload");
+                if (pdfinput.files.length>0)
+                {
+                    document.getElementById("sign").disabled = false;
+                }
             }
         })
         .catch(error => {
-            console.debug('Certificate fetch error:', error);
+            document.getElementById('certsign').value = '';
+            document.getElementById('certbtnsign').disabled = true;
+            document.getElementById("sign").disabled = true;
         });
     }
     
@@ -968,6 +976,7 @@
 
         const pdfinput = document.getElementById("pdfupload");
         const pdfviewer = document.getElementById("pdfviewer");
+        const currcert = document.getElementById("certsign");
 
         pdfinput.addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -975,9 +984,8 @@
                 const fileURL = URL.createObjectURL(file);
                 pdfviewer.src = fileURL;
                 pdfviewer.style.display = "block";
-                document.getElementById("sign").disabled = false;
-            } else {
-                alert("Select a PDF File");
+                if (currcert.value.trim() != "")
+                    document.getElementById("sign").disabled = false;
             }
         });
 
