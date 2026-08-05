@@ -117,6 +117,7 @@ class Arguments:
     key_handle: Any
     args: Any
     credentials: Any
+    generating_pub_key: Any
     pub_key: Any
 
     def serialize(self):
@@ -248,35 +249,46 @@ def index():
 
 @app.route("/keygen", methods=["POST"])
 def keygen():
-    client, info = get_client(
-        lambda info: PreviewSignExtension.NAME in info.extensions,
-        extensions=[PreviewSignExtension()],
-    )
-    create_options, state = server.register_begin(
-        user,
-        resident_key_requirement="discouraged",
-        user_verification=uv,
-        authenticator_attachment="cross-platform",
-    )
+    params = request.get_json()
 
-    result = client.make_credential(
-        {
-            **create_options["publicKey"],
-            "extensions": {
-                PreviewSignExtension.NAME: {
-                    "generateKey": {"algorithms": [ESP256_SPLIT_ARKG_PLACEHOLDER]}
-                }
-            },
-        }
-    )
+    if 'args' not in params:
+        client, info = get_client(
+            lambda info: PreviewSignExtension.NAME in info.extensions,
+            extensions=[PreviewSignExtension()],
+        )
+        create_options, state = server.register_begin(
+            user,
+            resident_key_requirement="discouraged",
+            user_verification=uv,
+            authenticator_attachment="cross-platform",
+        )
 
-    auth_data = server.register_complete(state, result)
-    credentials = [auth_data.credential_data]
-    sign_result = result.client_extension_results.previewSign
-    sign_key = sign_result.generated_key
-    pk = CoseKey.parse(
-        cbor.decode(websafe_decode(sign_key["publicKey"]))
-    )
+        result = client.make_credential(
+            {
+                **create_options["publicKey"],
+                "extensions": {
+                    PreviewSignExtension.NAME: {
+                        "generateKey": {"algorithms": [ESP256_SPLIT_ARKG_PLACEHOLDER]}
+                    }
+                },
+            }
+        )
+
+        auth_data = server.register_complete(state, result)
+        credentials = [auth_data.credential_data]
+        sign_result = result.client_extension_results.previewSign
+        sign_key = sign_result.generated_key
+        pk = CoseKey.parse(
+            cbor.decode(websafe_decode(sign_key["publicKey"]))
+        )
+        key_handle = sign_key.key_handle
+
+    else:
+        temp_args = Arguments.deserialize(params['args'])
+        pk = temp_args.generating_pub_key
+        key_handle = temp_args.key_handle
+        credentials = temp_args.credentials
+
     ctx = os.urandom(16)
     ikm = os.urandom(16)
     pk2, args = pk.derive_public_key(ikm, ctx)
@@ -294,12 +306,13 @@ def keygen():
     )
 
     arguments = Arguments(
-        key_handle=sign_key.key_handle,
+        key_handle=key_handle,
         args=args,
         credentials=credentials,
+        generating_pub_key=pk,
         pub_key=der_bytes,
     )
-    params = request.get_json()
+    
     subject = x509.Name(
         [
             x509.NameAttribute(x509.NameOID.COUNTRY_NAME, params["country"]),

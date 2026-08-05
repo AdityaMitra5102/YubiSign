@@ -1,1 +1,3 @@
-Run as admin on windows
+# YubiSign
+
+Uses Asynchronous Remote Key Generation for signing PDF documents.
