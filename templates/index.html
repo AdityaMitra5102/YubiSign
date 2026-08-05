@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YubiSign PDF // HUD</title>
+    <title>{{productname}}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -295,6 +295,22 @@
             margin-top: 1.5rem;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
         }
+        .error-msg {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            margin-top: 4px;
+            min-height: 1.1em;
+        }
+        input.invalid {
+            border-color: #e74c3c !important;
+        }
+        input.valid {
+            border-color: #27ae60 !important;
+        }
+        #submit-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -302,7 +318,7 @@
 
     <header>
         <div class="logo">
-            <span class="logo-dot"></span> YUBISIGN // PDF
+            <span class="logo-dot"></span> {{productname}}
         </div>
         <div class="nav-buttons">
             <button class="btn btn-secondary" onclick="showSection('home')">Home</button>
@@ -315,8 +331,8 @@
 
         <!-- HOME VIEW -->
         <div id="home" class="card hero">
-            <h1>Hardware Cryptography</h1>
-            <p>YubiKey PIV Module Interface // Secure PDF Authentication Engine</p>
+            <h1>YubiSign</h1>
+            <p>ARKG Based PDF Signatures</p>
             <div class="hero-buttons">
                 <button class="btn btn-primary" onclick="showSection('keygen')">Generate Keys</button>
                 <button class="btn btn-secondary" onclick="showSection('signer')">Open Signer</button>
@@ -326,7 +342,7 @@
         <!-- KEYGEN VIEW -->
         <div id="keygen" class="card" style="display: none;">
             <div class="card-header">
-                <h2>Key Generation Terminal</h2>
+                <h2>Key Generation</h2>
                 <button class="btn btn-secondary" onclick="showSection('home')">← Home</button>
             </div>
 
@@ -334,32 +350,128 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="country">Country Code</label>
-                        <input type="text" id="country" name="country" placeholder="US">
+                        <input type="text" id="country" name="country" placeholder="US" maxlength="2" autocomplete="off" required>
+                        <div class="error-msg" id="country-error"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="state">State / Province</label>
-                        <input type="text" id="state" name="state" placeholder="California">
+                        <input type="text" id="state" name="state" placeholder="California"  required>
                     </div>
 
                     <div class="form-group">
                         <label for="locality">Locality</label>
-                        <input type="text" id="locality" name="locality" placeholder="San Francisco">
+                        <input type="text" id="locality" name="locality" placeholder="San Francisco"  required>
                     </div>
 
                     <div class="form-group">
                         <label for="org">Organization Name</label>
-                        <input type="text" id="org" name="org" placeholder="Example LLC">
+                        <input type="text" id="org" name="org" placeholder="Example LLC"  required>
                     </div>
 
                     <div class="form-group full-width">
                         <label for="cname">Common Name</label>
-                        <input type="text" id="cname" name="cname" placeholder="example.com">
+                        <input type="text" id="cname" name="cname" placeholder="example.com" required>
+                        <div class="error-msg" id="cname-error"></div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Initialize Key Generation</button>
+                <button type="submit" class="btn btn-primary" id="submit-btn" style="width: 100%;" disabled>
+                    Initialize Key Generation
+                </button>
             </form>
+
+            <script>
+            (function () {
+                // Valid ISO 3166-1 alpha-2 country codes
+                const ISO2_COUNTRIES = new Set([
+                    "AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ",
+                    "BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BQ","BR","BS",
+                    "BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN",
+                    "CO","CR","CU","CV","CW","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE",
+                    "EG","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF",
+                    "GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM",
+                    "HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM",
+                    "JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC",
+                    "LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK",
+                    "ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA",
+                    "NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG",
+                    "PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW",
+                    "SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS",
+                    "ST","SV","SX","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO",
+                    "TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VI",
+                    "VN","VU","WF","WS","YE","YT","ZA","ZM","ZW"
+                ]);
+
+                // Reasonable domain name regex (labels, dots, optional trailing dot, no IP addresses)
+                const DOMAIN_REGEX = /^(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+
+                const countryInput = document.getElementById("country");
+                const cnameInput   = document.getElementById("cname");
+                const submitBtn    = document.getElementById("submit-btn");
+                const countryError = document.getElementById("country-error");
+                const cnameError   = document.getElementById("cname-error");
+
+                function validateCountry() {
+                    const value = countryInput.value.trim().toUpperCase();
+                    countryInput.value = value; // force uppercase
+
+                    if (!value) {
+                        setInvalid(countryInput, countryError, "Country code is required");
+                        return false;
+                    }
+                    if (value.length !== 2) {
+                        setInvalid(countryInput, countryError, "Must be exactly 2 letters (ISO 3166-1 alpha-2)");
+                        return false;
+                    }
+                    if (!ISO2_COUNTRIES.has(value)) {
+                        setInvalid(countryInput, countryError, "Invalid ISO country code");
+                        return false;
+                    }
+                    setValid(countryInput, countryError);
+                    return true;
+                }
+
+                function validateCname() {
+                    const value = cnameInput.value.trim().toLowerCase();
+
+                    if (!value) {
+                        setInvalid(cnameInput, cnameError, "Common Name is required");
+                        return false;
+                    }
+                    if (!DOMAIN_REGEX.test(value)) {
+                        setInvalid(cnameInput, cnameError, "Must be a valid domain name (e.g. example.com)");
+                        return false;
+                    }
+                    setValid(cnameInput, cnameError);
+                    return true;
+                }
+
+                function setValid(input, errorEl) {
+                    input.classList.remove("invalid");
+                    input.classList.add("valid");
+                    errorEl.textContent = "";
+                }
+
+                function setInvalid(input, errorEl, message) {
+                    input.classList.remove("valid");
+                    input.classList.add("invalid");
+                    errorEl.textContent = message;
+                }
+
+                function updateSubmitState() {
+                    const countryOk = validateCountry();
+                    const cnameOk   = validateCname();
+                    submitBtn.disabled = !(countryOk && cnameOk);
+                }
+
+                countryInput.addEventListener("input", updateSubmitState);
+                countryInput.addEventListener("blur", updateSubmitState);
+                cnameInput.addEventListener("input", updateSubmitState);
+                cnameInput.addEventListener("blur", updateSubmitState);
+
+            })();
+            </script>
 
             <div style="margin: 2.5rem 0 1.5rem 0; height: 1px; background: var(--border-glow);"></div>
 
@@ -383,13 +495,18 @@
         <!-- SIGNER VIEW -->
         <div id="signer" class="card" style="display: none;">
             <div class="card-header">
-                <h2>Cryptographic Signer</h2>
+                <h2>Document Signer</h2>
                 <button class="btn btn-secondary" onclick="showSection('home')">← Home</button>
             </div>
 
             <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label for="args2">Signing Arguments</label>
-                <textarea id="args2" rows="5">{{args}}</textarea>
+                <label for="args2">Signing Arguments (Paste or drag and drop)</label>
+                <div id="args2-container" style="position: relative; border: 2px dashed var(--border-glow); border-radius: 2px; padding: 1rem; background: rgba(0, 240, 255, 0.02); transition: all 0.3s ease;">
+                    <textarea id="args2" rows="5">{{args}}</textarea>
+                    <div id="args2-drop-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 240, 255, 0.15); border-radius: 2px; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                        <span style="color: var(--primary-cyan); font-weight: 600; text-align: center; pointer-events: none;">Drop your arguments file here</span>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 2rem;">
@@ -397,14 +514,13 @@
                 <input type="file" id="pdfupload" accept="application/pdf">
             </div>
 
-            <button id="sign" class="btn btn-primary" style="width: 100%; margin-bottom: 1.5rem;" disabled>Execute Digital Signature</button>
+            <button id="sign" class="btn btn-primary" style="width: 100%; margin-bottom: 1.5rem;" disabled>Sign Document</button>
 
             <iframe id="pdfviewer" style="width: 100%; height: 500px; display: none;"></iframe>
         </div>
 
     </div>
 
-    <!-- Interface Switching Script -->
     <script>
         function showSection(sectionId) {
             document.getElementById('home').style.display = 'none';
@@ -415,7 +531,74 @@
         }
     </script>
 
-    <!-- Native App Logic (Unmodified) -->
+    
+    <script>
+        const args2Container = document.getElementById("args2-container");
+        const args2Textarea = document.getElementById("args2");
+        const args2DropOverlay = document.getElementById("args2-drop-overlay");
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            args2Container.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            args2Container.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            args2Container.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            args2DropOverlay.style.opacity = "1";
+            args2Container.style.borderColor = "var(--primary-cyan)";
+            args2Container.style.background = "rgba(0, 240, 255, 0.08)";
+        }
+
+        function unhighlight(e) {
+            args2DropOverlay.style.opacity = "0";
+            args2Container.style.borderColor = "var(--border-glow)";
+            args2Container.style.background = "rgba(0, 240, 255, 0.02)";
+        }
+
+        args2Container.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+
+            const file = files[0];
+            
+            if (!file.type.startsWith('text/') && !file.name.endsWith('.txt')) {
+                alert("Please drop a .txt file");
+                return;
+            }
+
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                args2Textarea.value = event.target.result;
+            };
+
+            reader.onerror = function() {
+                alert("Error reading file");
+            };
+
+            reader.readAsText(file);
+        }
+    </script>
+
+    
     <script>
         function downloadCert() {
             const cert = document.getElementById("cert").value;

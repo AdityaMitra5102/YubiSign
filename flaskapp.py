@@ -4,13 +4,11 @@ from getpass import getpass
 from fido2.client import DefaultClientDataCollector, Fido2Client, UserInteraction
 from fido2.hid import CtapHidDevice
 
-# Support NFC devices if we can
 try:
     from fido2.pcsc import CtapPcscDevice
 except ImportError:
     CtapPcscDevice = None
 
-# Use the Windows WebAuthn API if available, and we're not running as admin
 try:
     from fido2.client.windows import WindowsClient
 
@@ -21,7 +19,6 @@ except Exception:
     use_winclient = False
 
 
-# Handle user interaction via CLI prompts
 class CliInteraction(UserInteraction):
     def __init__(self):
         self._pin = None
@@ -48,16 +45,6 @@ def enumerate_devices():
 
 
 def get_client(predicate=None, **kwargs):
-    """Locate a CTAP device suitable for use.
-
-    If running on Windows as non-admin, the predicate check will be skipped and
-    a webauthn.dll based client will be returned.
-
-    Extra kwargs will be passed to the constructor of Fido2Client.
-
-    The client will be returned, with the CTAP2 Info, if available.
-    """
-
     client_data_collector = DefaultClientDataCollector("https://example.com")
 
     if use_winclient:
@@ -65,20 +52,19 @@ def get_client(predicate=None, **kwargs):
 
     user_interaction = kwargs.pop("user_interaction", None) or CliInteraction()
 
-    # Locate a device
     for dev in enumerate_devices():
-        # Set up a FIDO 2 client using the origin https://example.com
         client = Fido2Client(
             dev,
             client_data_collector=client_data_collector,
             user_interaction=user_interaction,
             **kwargs,
         )
-        # Check if it is suitable for use
         if predicate is None or predicate(client.info):
             return client, client.info
     else:
         raise ValueError("No suitable Authenticator found!")
+
+# The above code is copied from Yubico/python-fido2/examples/exampleclient.py
 
 
 from flask import *
@@ -100,13 +86,13 @@ import io
 
 uv = "discouraged"
 
-# Locate a suitable FIDO authenticator
-
+productname = "YubiSign"
 
 server = Fido2Server({"id": "example.com", "name": "Example RP"}, attestation="none")
 user = {"id": b"user_id", "name": "A. User"}
 
 app = Flask(__name__)
+
 
 
 @dataclass
@@ -156,7 +142,6 @@ class YubikeySigner(ec.EllipticCurvePrivateKey):
         result = client.get_assertion(
             {
                 **request_options["publicKey"],
-                # Add extension outputs. We have only 1 credential in allowCredentials
                 "extensions": {
                     PreviewSignExtension.NAME: {
                         "signByCredential": {
@@ -210,12 +195,15 @@ def sign_pdf(pdf_bytes, private_key, cert_pem) -> bytes:
 
     cert = x509.load_pem_x509_certificate(cert_pem)
 
+    org_attrs = cert.subject.get_attributes_for_oid(x509.oid.NameOID.ORGANIZATION_NAME)
+    org_name = org_attrs[0].value if org_attrs else None
+
     date = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S+00'00'")
     dct = {
         "sigflags": 3,
         "sigpage": 0,
         "sigbutton": True,
-        "signature": "Signed with YubiSign",
+        "signature": f"Signed by {org_name} with {productname}" if org_name else f"Signed with {productname}",
         "signaturebox": (0, 0, 100, 100),
         "aligned": 4096,
         "signingdate": date.encode(),
@@ -238,7 +226,7 @@ def sign_pdf(pdf_bytes, private_key, cert_pem) -> bytes:
 @app.route("/")
 def index():
     args = request.cookies.get("args", "")
-    return render_template("index.html", args=args)
+    return render_template("index.html", args=args, productname=productname)
 
 
 @app.route("/keygen", methods=["POST"])
@@ -265,16 +253,13 @@ def keygen():
         }
     )
 
-    # Complete registration
     auth_data = server.register_complete(state, result)
     credentials = [auth_data.credential_data]
     sign_result = result.client_extension_results.previewSign
     sign_key = sign_result.generated_key
     pk = CoseKey.parse(
         cbor.decode(websafe_decode(sign_key["publicKey"]))
-    )  # COSE key in bytes
-
-    # Arbitrary bytestring used for ctx, ikm
+    )
     ctx = os.urandom(16)
     ikm = os.urandom(16)
     pk2, args = pk.derive_public_key(ikm, ctx)
@@ -314,7 +299,7 @@ def keygen():
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
-        .issuer_name(subject)  # Self-signed
+        .issuer_name(subject)
         .public_key(public_key)
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
@@ -362,4 +347,5 @@ def sign():
 
 
 if __name__ == "__main__":
+    print(f"Starting {productname}")
     app.run("0.0.0.0", port=5000, debug=False)
