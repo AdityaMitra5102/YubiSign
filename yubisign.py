@@ -375,6 +375,15 @@ def sign():
         download_name="signed.pdf",
     )
 
+@app.route("/getcert", methods=["POST"])
+def getcert():
+    arg = request.get_json().get('arg')
+    arguments = Arguments.deserialize(arg)
+    cert = x509.load_pem_x509_certificate(arguments.pub_key)
+    pem_bytes = cert.public_bytes(serialization.Encoding.PEM)
+    pem = pem_bytes.decode()
+    return jsonify({"cert": pem})
+
 import webbrowser
 if __name__ == "__main__":
     print(f"Starting {productname}")

@@ -160,4 +160,14 @@ Now since the IPC Daemon is running, you may start YubiSign by running `python y
 
 # Running instructions
 
-This doesn't really need any instruction. The application presents a GUI on a web interface.
+This doesn't really need any instruction. The application presents a GUI on a web interface. On-screen instructions are to be followed. Keep the Yubikey with firmware 5.8 connected for the keygen and signing processes. Ideally when generating a keypair with ARKG from a previously generated credential, you wouldn't need the Yubikey but this application automatically generates a self-signed certificate. The key is required for this certificate signing process.
+
+- Opening the application presents the homepage:
+![Homepage](images/home.png)
+
+## Key generation from Yubikey
+
+- To generate a new keypair, go to `Generate Keys`. By default it would be on the `Generate from Yubikey`tab which would run a fresh `MakeCredential` call.
+![Generate from Yubikey](images/keygen_yk.png)
+- Fill in the details for the certificate and click on `Generate From Yubikey`
+- Tap the Yubikey when it blinks. It will blink twice: the first time when running the MakeCredential call, the second time for signing the certificate. The generated certificate and "arguments"

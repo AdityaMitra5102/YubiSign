@@ -738,6 +738,72 @@
                 </div>
             </div>
 
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="certsign">Certificate (PEM)</label>
+                <textarea id="certsign" rows="5" readonly></textarea>
+                <div class="action-group">
+                    <button id="certbtnsign" class="btn btn-secondary" onclick="downloadCertSign();" disabled>Download Certificate</button>
+                </div>
+            </div>
+
+<script>
+    function updateCertificate() {
+        const args2Value = document.getElementById('args2').value;
+        
+        if (args2Value.trim() === '') {
+            document.getElementById('certsign').value = '';
+            document.getElementById('certbtnsign').disabled = true;
+            return;
+        }
+        
+        fetch('/getcert', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ arg: args2Value })
+        })
+        .then(response => {
+            if (response.status === 200) {
+                console.log(response);
+                const r= response.json();
+                console.log(r);
+                return r;
+            }
+            throw new Error('Not 200');
+        })
+        .then(data => {
+            console.log(data)
+            if (data && data.cert) {
+                document.getElementById('certsign').value = data.cert;
+                document.getElementById('certbtnsign').disabled = false;
+            }
+        })
+        .catch(error => {
+            console.debug('Certificate fetch error:', error);
+        });
+    }
+    
+    function downloadCertSign() {
+        const certContent = document.getElementById('certsign').value;
+        const blob = new Blob([certContent], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'certificate.crt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    }
+    
+    
+        updateCertificate();
+        document.getElementById('args2').addEventListener('change', updateCertificate);
+        document.getElementById('args2').addEventListener('input', updateCertificate);
+    
+</script>
+
             <div class="form-group" style="margin-bottom: 2rem;">
                 <label for="pdfupload">Select Target Document (PDF)</label>
                 <input type="file" id="pdfupload" accept="application/pdf">
@@ -834,7 +900,7 @@
             const blob = new Blob([cert], {type: "text/plain; charset=utf-8"});
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "public-key.crt";
+            link.download = "certificate.crt";
             link.click();
             URL.revokeObjectURL(link.href);
         }
