@@ -277,3 +277,6 @@ The following resources were used in development of the project and learning:
 
 Over the course of the past few days (I started tinkering the moment I received the Yubikey), I spent my time reading the CTAP 2.3 specifications, the PreviewSign draft by Yubico and the ARKG Algorithm IETF Draft by Emil Lundberg and John Bradley. I really liked the mathematical assumptions behind the algorithm. It wasn't my first time using the `python-fido2` library. But the example codesbases for ARKG helped me understand the practical applications behind the mathematics. Apart from that, the blocker I hit for current browsers and the Windows Hello `webauthn.dll` stack dropping the `PreviewSign` extension encouraged me to develop the IPC based transport (Though I have been working on it from before the hackathon as well because this blocker isn't new. Windows doesn't provide any native way to access Discoverable Credentials either.) 
 
+# Demo video
+
+[![Demo](https://img.youtube.com/vi/H7JIcjjjl8w/maxresdefault.jpg)](https://youtu.be/H7JIcjjjl8w)  
