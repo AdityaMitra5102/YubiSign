@@ -388,5 +388,5 @@ import webbrowser
 if __name__ == "__main__":
     print(f"Starting {productname}")
     port = 5000
-    webbrowser.open(f'http://localhost:{port}')
-    app.run("0.0.0.0", port=port, debug=False)
+    webbrowser.open(f'http://127.0.0.1:{port}')
+    app.run("127.0.0.1", port=port, debug=False)

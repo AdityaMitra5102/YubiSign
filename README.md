@@ -174,7 +174,7 @@ This doesn't really need any instruction. The application presents a GUI on a we
 
 - Fill in the details for the certificate and click on `Generate From Yubikey`
 
-- Tap the Yubikey when it blinks. It will blink twice: the first time when running the MakeCredential call, the second time for signing the certificate. The generated certificate and "arguments" will be displayed. 
+- Tap the Yubikey when it blinks. It will blink twice: the first time when running the MakeCredential call, the second time for signing the certificate. The generated certificate and "arguments" will be displayed. The "arguments" is basically a combination of items required to identify the signing key in the Yubikey.
 
 ![Generated cert and args](images/keygen_yk_complete.png)
 
@@ -248,6 +248,22 @@ And the verifier may verify the same against the one shown in the PDF reader.
 
 ![Verifier SHA1](images/cert_sha1_adobe.png)
 
+# Tech Stack and dependencies
+
+The application is a pure `python` application with a Web UI. The dependencies include:
+
+- `Flask` for hosting the application locally in the form of a web ui.
+- `Endesive` for signing PDF documents.
+- `Cryptography` library of Python for handling cryptographic operations.
+- `Python-Fido2` library for interacting with the authenticator.
+- `Pickle` because I didn't have time to define a serialization format for the "arguments" for this hackathon. For production use, a suitable serialization format is recommended.
+
+The Web UI uses vanilla JS and CSS.
+
+# Validation
+
+The PDF file available [here](verification/signed.pdf) has been signed with **YubiSign**. The corresponding X.509 certificate is available [here](verification/cert.crt). It may be used to verify the signature.
+
 # Help used:
 
 The following resources were used in development of the project and learning:
@@ -256,4 +272,8 @@ The following resources were used in development of the project and learning:
 - [ARKG Algorithm](https://datatracker.ietf.org/doc/draft-bradleylundberg-cfrg-arkg/)
 - [PreviewSign extension](https://pr-preview.s3.amazonaws.com/w3c/webauthn/pull/2078.html#sctn-sign-extension)
 - UI/ CSS has been done with the help of GenAI Chatbots Claude and Grok, free tier.
+
+# Learnings
+
+Over the course of the past few days (I started tinkering the moment I received the Yubikey), I spent my time reading the CTAP 2.3 specifications, the PreviewSign draft by Yubico and the ARKG Algorithm IETF Draft by Emil Lundberg and John Bradley. I really liked the mathematical assumptions behind the algorithm. It wasn't my first time using the `python-fido2` library. But the example codesbases for ARKG helped me understand the practical applications behind the mathematics. Apart from that, the blocker I hit for current browsers and the Windows Hello `webauthn.dll` stack dropping the `PreviewSign` extension encouraged me to develop the IPC based transport (Though I have been working on it from before the hackathon as well because this blocker isn't new. Windows doesn't provide any native way to access Discoverable Credentials either.) 
 
