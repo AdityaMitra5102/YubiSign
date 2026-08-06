@@ -746,71 +746,7 @@
                 </div>
             </div>
 
-<script>
-    function updateCertificate() {
-        const args2Value = document.getElementById('args2').value;
-        
-        if (args2Value.trim() === '') {
-            document.getElementById('certsign').value = '';
-            document.getElementById('certbtnsign').disabled = true;
-            document.getElementById("sign").disabled = true;
-            return;
-        }
-        
-        fetch('/getcert', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ arg: args2Value })
-        })
-        .then(response => {
-            if (response.status === 200) {
-                console.log(response);
-                const r= response.json();
-                console.log(r);
-                return r;
-            }
-            throw new Error('Not 200');
-        })
-        .then(data => {
-            console.log(data)
-            if (data && data.cert) {
-                document.getElementById('certsign').value = data.cert;
-                document.getElementById('certbtnsign').disabled = false;
-                const pdfinput = document.getElementById("pdfupload");
-                if (pdfinput.files.length>0)
-                {
-                    document.getElementById("sign").disabled = false;
-                }
-            }
-        })
-        .catch(error => {
-            document.getElementById('certsign').value = '';
-            document.getElementById('certbtnsign').disabled = true;
-            document.getElementById("sign").disabled = true;
-        });
-    }
-    
-    function downloadCertSign() {
-        const certContent = document.getElementById('certsign').value;
-        const blob = new Blob([certContent], { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'certificate.crt';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    }
-    
-    
-        updateCertificate();
-        document.getElementById('args2').addEventListener('change', updateCertificate);
-        document.getElementById('args2').addEventListener('input', updateCertificate);
-    
-</script>
+
 
             <div class="form-group" style="margin-bottom: 2rem;">
                 <label for="pdfupload">Select Target Document (PDF)</label>
@@ -834,7 +770,6 @@
         }
     </script>
 
-    
     <script>
         const args2Container = document.getElementById("args2-container");
         const args2Textarea = document.getElementById("args2");
@@ -901,7 +836,71 @@
         }
     </script>
 
-    
+    <script>
+        function updateCertificate() {
+            const args2Value = document.getElementById('args2').value;
+            
+            if (args2Value.trim() === '') {
+                document.getElementById('certsign').value = '';
+                document.getElementById('certbtnsign').disabled = true;
+                document.getElementById("sign").disabled = true;
+                return;
+            }
+            
+            fetch('/getcert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ arg: args2Value })
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    console.log(response);
+                    const r= response.json();
+                    console.log(r);
+                    return r;
+                }
+                throw new Error('Not 200');
+            })
+            .then(data => {
+                console.log(data)
+                if (data && data.cert) {
+                    document.getElementById('certsign').value = data.cert;
+                    document.getElementById('certbtnsign').disabled = false;
+                    const pdfinput = document.getElementById("pdfupload");
+                    if (pdfinput.files.length>0)
+                    {
+                        document.getElementById("sign").disabled = false;
+                    }
+                }
+            })
+            .catch(error => {
+                document.getElementById('certsign').value = '';
+                document.getElementById('certbtnsign').disabled = true;
+                document.getElementById("sign").disabled = true;
+            });
+        }
+        
+        function downloadCertSign() {
+            const certContent = document.getElementById('certsign').value;
+            const blob = new Blob([certContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'certificate.crt';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+        
+        
+            updateCertificate();
+            document.getElementById('args2').addEventListener('change', updateCertificate);
+            document.getElementById('args2').addEventListener('input', updateCertificate);
+        
+    </script>    
     <script>
         function downloadCert() {
             const cert = document.getElementById("cert").value;
