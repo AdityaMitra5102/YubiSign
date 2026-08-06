@@ -12,12 +12,12 @@ This project aims at streamlining the workflow for signing documents. It leverag
 
 The advantages of using YubiSign:
 - Secrets are hardware backed: Private keys are securely stored in the Yubikeys and cannot be extracted or easily compromised. The signing happens in the Yubikey.
-- Easy of use: Extensive setups with PIV, GnuPG, etc., is not required for reliable PDF signing.
+- Ease of use: Extensive setups with PIV, GnuPG, etc., is not required for reliable PDF signing.
 - Unlinkability: Multiple self-signed certificates and keypairs for PDF signing can be made from a single FIDO credential with ARKG, where they cannot be cryptographically linked.
 
 ## Secondary problem statement
 
-While this problem is not related to the chosen problem statement, it was instrumental in fast development of the solution. I am developing on a Windows system. Windows FIDO2 client implemented under `webauthn.dll` does not support the `PreviewSign` extension and drops the calls. The only way to use it was to run the application with elevated privileges. Now running a whole python application which potentially interacts with artifacts from the internet (PDF Files) and uses the `pickle` library with elevated privileges is definetely a terrible idea. (I know I should have used better serialization than `pickle` but shortage of time in this hackathon forced me to use it.) It could make the application an easy target for RCE vulnerabilities. Hence, I developed an IPC based daemon which ran using `system` privileges, thus not fully-elevated but allows direct CTAP access over HID channels. 
+While this problem is not related to the chosen problem statement, it was instrumental in fast development of the solution. I am developing on a Windows system. Windows FIDO2 client implemented under `webauthn.dll` does not support the `PreviewSign` extension and drops the calls. The only way to use it was to run the application with elevated privileges. Now running a whole python application which potentially interacts with artifacts from the internet (PDF Files) and uses the `pickle` library with elevated privileges is definitely a terrible idea. (I know I should have used better serialization than `pickle` but shortage of time in this hackathon forced me to use it.) It could make the application an easy target for RCE vulnerabilities. Hence, I developed an IPC based daemon which ran using `system` privileges, thus not fully-elevated but allows direct CTAP access over HID channels. 
 
 The same is mentioned in the codebase at [IPC Calls](https://github.com/AdityaMitra5102/YubiSign/blob/main/yubisign.py#L21). Installing the IPC Daemon can be done by installing the `python-fido2` library from my fork and branch at [Repo](https://github.com/AdityaMitra5102/python-fido2/tree/namedpipe#installation). Keeping the daemon active ensures the application can run directly without having to run with elevated privileges.
 
@@ -104,7 +104,7 @@ class YubikeySigner(ec.EllipticCurvePrivateKey):
 
 The above shows the implementation of the signer class as a subclass of `EllipticCurvePrivateKey` which facilitates the usability.
 
-Another important feature used is since CTAP 2.2, `MakeCredential` calls do not require UV or pin mandatorily (except for discoverable credentials). This makes the flow very seamless and done not prompt the user for pin inputs.
+Another important feature used is since CTAP 2.2, `MakeCredential` calls do not require UV or pin mandatorily (except for discoverable credentials). This makes the flow very seamless and does not prompt the user for pin inputs.
 
 # Setup instructions
 
@@ -120,9 +120,9 @@ Follow the below instructions to install  YubiSign
 
 - Install dependencies (you may have to use `python3` instead of `python` in some linux systems.)
 
-`python -m pip install requirements.txt`
+`python -m pip install -r requirements.txt`
 
-- [On linux systems] Set up `udev` rules to allow access to `HIDRAW` devies for direct CTAP Access
+- [On linux systems] Set up `udev` rules to allow access to `HIDRAW` devices for direct CTAP Access
 
 - Launch the application [Use elevation in Windows]
 
@@ -275,7 +275,7 @@ The following resources were used in development of the project and learning:
 
 # Learnings
 
-Over the course of the past few days (I started tinkering the moment I received the Yubikey), I spent my time reading the CTAP 2.3 specifications, the PreviewSign draft by Yubico and the ARKG Algorithm IETF Draft by Emil Lundberg and John Bradley. I really liked the mathematical assumptions behind the algorithm. It wasn't my first time using the `python-fido2` library. But the example codesbases for ARKG helped me understand the practical applications behind the mathematics. Apart from that, the blocker I hit for current browsers and the Windows Hello `webauthn.dll` stack dropping the `PreviewSign` extension encouraged me to develop the IPC based transport (Though I have been working on it from before the hackathon as well because this blocker isn't new. Windows doesn't provide any native way to access Discoverable Credentials either.) 
+Over the course of the past few days (I started tinkering the moment I received the Yubikey), I spent my time reading the CTAP 2.3 specifications, the PreviewSign draft by Yubico and the ARKG Algorithm IETF Draft by Emil Lundberg and John Bradley. I really liked the mathematical assumptions behind the algorithm. It wasn't my first time using the `python-fido2` library. But the example codebases for ARKG helped me understand the practical applications behind the mathematics. Apart from that, the blocker I hit for current browsers and the Windows Hello `webauthn.dll` stack dropping the `PreviewSign` extension encouraged me to develop the IPC based transport (Though I have been working on it from before the hackathon as well because this blocker isn't new. Windows doesn't provide any native way to access Discoverable Credentials either.) 
 
 # Demo video
 
